@@ -1,6 +1,8 @@
 package org.example.application.bus;
 
 import org.example.application.repo.GsonEventSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 public class RabbitMQConsumer {
 
     private GsonEventSerializer serializer;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQConsumer.class);
 
     @Autowired
     private ApplicationEventPublisher publisher;
@@ -35,6 +39,10 @@ public class RabbitMQConsumer {
         try {
             var event = serializer.deserialize(notification.getBody(), Class.forName(notification.getType()));
             publisher.publishEvent(event);
+
+            String mensaje = String.format("{type: %s , aggregateId : %s}", event.getType(), event.getAggregateId());
+            LOGGER.info("Mensaje consumido {}", mensaje);
+
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
